@@ -1,0 +1,56 @@
+---
+title: "DataSummary"
+format: html
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+## LPBO Data Summary 
+
+This code was written to facilitate the download and cleaning of LPBO annual data for the purpose of creating annual outputs for reporting.
+
+### Load Libraries 
+
+```{r}
+
+#If using NatureCounts for the first time, install the package
+#install.packages("remotes")
+#remotes::install_github("BirdsCanada/naturecounts")
+
+library(naturecounts)
+library(tidyverse)
+
+```
+
+### Create Directories 
+
+```{r}
+
+#Create data folder and output folders in working directory
+if(!dir.exists("Data")) dir.create("Data")
+if(!dir.exists("Output")) dir.create("Output")
+
+#Assign directories
+out.dir <- "Output/"
+data.dir <- "Data/"
+
+```
+
+### Download Data
+
+You will need a NatureCounts account and have requested permission to access the data through the R package.
+
+```{r}
+
+year=2024 #specify the year you want to download
+req_id = XXXXXX #specify the quest ID that was sent to you via email once the data download was approved
+ID = "YOURUSERNAME"
+
+LPBO<-nc_data_dl(collections ="CMMN_DET_LPBO", years = year, fields_set = "extended", username = "dethier", info = "Date for end of your summary")
+
+
+
+
+
+```
