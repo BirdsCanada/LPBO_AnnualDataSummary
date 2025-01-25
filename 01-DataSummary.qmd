@@ -47,10 +47,20 @@ year=2024 #specify the year you want to download
 req_id = XXXXXX #specify the quest ID that was sent to you via email once the data download was approved
 ID = "YOURUSERNAME"
 
-LPBO<-nc_data_dl(collections ="CMMN_DET_LPBO", years = year, fields_set = "extended", username = "dethier", info = "Date for end of your summary")
+LPBO<-nc_data_dl(collections ="CMMN-DET-LPBO", years= year, fields_set = "extended", username = ID, info = "Date for end of your summary", request_id = req=id)
 
 
-
-
+#save a copy of the data in your `Data` directory
+write.csv(LPBO, paste(data.dir, "LPBO_", year, ".csv"), row.names = FALSE)
 
 ```
+
+
+### Data Preparation
+
+```{r}
+
+#Select only the columns you need
+LPBO <- LPBO %>% select(species_id, CommonName, YearCollected, MonthCollected, DayCollected, SiteCode, ObservationCount, ObservationDescriptor, ObservationCount2, ObservationDescriptor2, ObservationCount3, ObservationDescriptor3, ObservationCount4, ObservationDescriptor4, ObservationCount5, ObservationDescriptor5)
+
+#Effort measurement need stanfered to the BMDE.
