@@ -52,6 +52,7 @@ LPBO<-nc_data_dl(collections ="CMMN-DET-LPBO", years= year, fields_set = "extend
 
 #save a copy of the data in your `Data` directory
 write.csv(LPBO, paste(data.dir, "LPBO_", year, ".csv"), row.names = FALSE)
+LPBO<-read.csv(paste(data.dir, "LPBO_", year, ".csv"))
 
 ```
 
@@ -61,6 +62,49 @@ write.csv(LPBO, paste(data.dir, "LPBO_", year, ".csv"), row.names = FALSE)
 ```{r}
 
 #Select only the columns you need
-LPBO <- LPBO %>% select(species_id, CommonName, YearCollected, MonthCollected, DayCollected, SiteCode, ObservationCount, ObservationDescriptor, ObservationCount2, ObservationDescriptor2, ObservationCount3, ObservationDescriptor3, ObservationCount4, ObservationDescriptor4, ObservationCount5, ObservationDescriptor5)
+dat <- LPBO %>% select(species_id, CommonName, YearCollected, MonthCollected, DayCollected, JulianDay, record_id, SiteCode, ObservationCount, ObservationDescriptor, ObservationCount2, ObservationDescriptor2, ObservationCount3, ObservationDescriptor3, ObservationCount4, ObservationDescriptor4, ObservationCount5, ObservationDescriptor5)
 
-#Effort measurement need stanfered to the BMDE.
+#Effort measurement need transferred to the BMDE.
+
+#Summarize the total number of species, sum of species band/census/DET, and record_id by station
+sum1<- dat %>% group_by(SiteCode) %>% summarise(TotalUniqueSpecies = n_distinct(species_id), TotalBand=sum(as.numeric(ObservationCount4), na.rm = TRUE), TotalCensus=sum(as.numeric(ObservationCount3), na.rm=TRUE), TotalDET=sum(as.numeric(ObservationCount), na.rm=TRUE), TotalRecords = n_distinct(record_id))
+
+#Include a final row in the above table what sums the columns for all stations
+sum2<-sum1 %>% summarise(TotalUniqueSpecies = max(TotalUniqueSpecies), TotalBand=sum(TotalBand), TotalCensus=sum(TotalCensus), TotalDET=sum(TotalDET), TotalRecords = sum(TotalRecords)) %>% mutate(SiteCode="All") %>% select(SiteCode, TotalUniqueSpecies, TotalBand, TotalCensus, TotalDET, TotalRecords)
+
+#Combine the two tables
+sum<-rbind(sum1, sum2)
+
+#Create a spring and fall variable based on the month, where spring runs for May to July and fall runs from August to November
+dat$Season<-ifelse(dat$MonthCollected %in% c(5,6,7), "Spring", ifelse(dat$MonthCollected %in% c(8,9,10,11), "Fall", "Other")) 
+#remove the "Other" season
+dat<-dat %>% filter(Season %in% c("Spring", "Fall"))
+
+#Create a summary table for spring and fall seperate, that summarize the total number of species, sum of species band/census/DET, and record_id by station, and the number of days each station was active
+
+sum3<- dat %>% group_by(SiteCode, Season) %>% summarise(TotalUniqueSpecies = n_distinct(species_id), TotalBand=sum(as.numeric(ObservationCount4), na.rm = TRUE), TotalCensus=sum(as.numeric(ObservationCount3), na.rm=TRUE), TotalDET=sum(as.numeric(ObservationCount), na.rm=TRUE), TotalRecords = n_distinct(record_id), DaysActive=n_distinct(JulianDay))
+
+#Include a final row in the above table what sums the columns for all stations
+sum4<-sum3 %>% group_by(Season) %>% summarise(TotalUniqueSpecies = max(TotalUniqueSpecies), TotalBand=sum(TotalBand), TotalCensus=sum(TotalCensus), TotalDET=sum(TotalDET), TotalRecords = sum(TotalRecords), DaysActive=sum(DaysActive)) %>% mutate(SiteCode="All") %>% select(SiteCode, Season, TotalUniqueSpecies, TotalBand, TotalCensus, TotalDET, TotalRecords, DaysActive)
+
+#Combine the two tables
+sum_spfall<-rbind(sum3, sum4)
+
+
+```
+
+Total for the year
+-	Total volunteer/person hours
+-	Total species and forms reported
+-	Total number of individuals banded
+-	Total number of species and forms banded
+For Spring and Fall, separately….
+-       Total volunteer/person hours
+-       Total species and forms reported
+-       Total number of individuals banded
+-       Total number of species and forms banded
+-       Total station-days of migration monitoring (for Old Cut, Breakwater, and Tip separately)
+-       Total net hours (mist net)
+-       Total trap hours (J-trap and Ground trap separately)
+-       Overall catch rate (birds/100 hours)
+-       Total number of visitors to Old Cut
